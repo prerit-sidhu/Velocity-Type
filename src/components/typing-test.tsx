@@ -57,11 +57,11 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
   }, [duration]);
 
   useEffect(() => {
-    if (textRef.current !== text || duration !== timeLeft) {
+    if (textRef.current !== text || duration !== (timeLeft === undefined ? undefined : duration)) {
       handleRestart();
       textRef.current = text;
     }
-  }, [text, duration, handleRestart, timeLeft]);
+  }, [text, duration, handleRestart]);
 
   const calculateWPM = useCallback((chars: number, timeMs: number) => {
     if (timeMs === 0) return 0;
