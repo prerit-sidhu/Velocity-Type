@@ -15,9 +15,10 @@ export function TypingTest({ text }: { text: string }) {
   const [wpm, setWpm] = useState(0);
   const [cpm, setCpm] = useState(0);
   const [isFocused, setIsFocused] = useState(true);
+  const [errorCount, setErrorCount] = useState(0);
+  const [totalCharsTyped, setTotalCharsTyped] = useState(0);
 
   const textRef = useRef(text);
-  const correctChars = useRef(0);
 
   const calculateCorrectChars = (currentInput: string) => {
     let count = 0;
@@ -36,7 +37,8 @@ export function TypingTest({ text }: { text: string }) {
     setEndTime(null);
     setWpm(0);
     setCpm(0);
-    correctChars.current = 0;
+    setErrorCount(0);
+    setTotalCharsTyped(0);
     setIsFocused(true);
   }, []);
 
@@ -61,17 +63,18 @@ export function TypingTest({ text }: { text: string }) {
   }, []);
 
   const calculateAccuracy = useCallback(() => {
-    if (userInput.length === 0) return 100;
-    return Math.round((correctChars.current / userInput.length) * 100);
-  }, [userInput.length]);
+    if (totalCharsTyped === 0) return 100;
+    const correctChars = totalCharsTyped - errorCount;
+    return Math.round((correctChars / totalCharsTyped) * 100);
+  }, [totalCharsTyped, errorCount]);
 
   useEffect(() => {
     if (status === 'running' && startTime) {
       const interval = setInterval(() => {
         const timeElapsed = Date.now() - startTime;
-        correctChars.current = calculateCorrectChars(userInput);
-        setWpm(calculateWPM(correctChars.current, timeElapsed));
-        setCpm(calculateCPM(correctChars.current, timeElapsed));
+        const correctChars = calculateCorrectChars(userInput);
+        setWpm(calculateWPM(correctChars, timeElapsed));
+        setCpm(calculateCPM(correctChars, timeElapsed));
       }, 1000);
       return () => clearInterval(interval);
     }
@@ -108,45 +111,40 @@ export function TypingTest({ text }: { text: string }) {
 
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
+
+        if (status === 'waiting') {
+          setStatus('running');
+          setStartTime(Date.now());
+        }
+
+        setTotalCharsTyped((prev) => prev + 1);
+
+        if (e.key !== text[userInput.length]) {
+          setErrorCount((prev) => prev + 1);
+        }
         
         setUserInput((prev) => {
           const newUserInput = prev + e.key;
-          if (newUserInput.length > text.length) {
-            return prev;
-          }
-
-          if (status === 'waiting') {
-            setStatus('running');
-            setStartTime(Date.now());
-          }
-          
-          correctChars.current = calculateCorrectChars(newUserInput);
-          
-          if (newUserInput.length === text.length) {
+          if (newUserInput.length >= text.length) {
             setStatus('finished');
-            const finalTime = Date.now() - (startTime || Date.now());
             setEndTime(Date.now());
-            setWpm(calculateWPM(correctChars.current, finalTime));
-            setCpm(calculateCPM(correctChars.current, finalTime));
           }
           return newUserInput;
         });
+
       } else if (e.key === 'Backspace') {
         e.preventDefault();
-        setUserInput((prev) => {
-            const newUserInput = prev.slice(0, -1);
-            correctChars.current = calculateCorrectChars(newUserInput);
-            return newUserInput;
-        });
+        setUserInput((prev) => prev.slice(0, -1));
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, text, handleRestart, startTime, calculateWPM, calculateCPM, isFocused]);
+  }, [status, text, handleRestart, startTime, isFocused, userInput.length]);
 
   if (status === 'finished' && startTime && endTime) {
-    const finalWpm = calculateWPM(correctChars.current, endTime! - startTime!);
+    const correctChars = calculateCorrectChars(userInput);
+    const finalWpm = calculateWPM(correctChars, endTime - startTime);
     const finalAccuracy = calculateAccuracy();
     return (
       <Results
