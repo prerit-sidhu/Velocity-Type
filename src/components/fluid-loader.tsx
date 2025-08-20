@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
-const LOADER_SIZE = 400; // Size of the loader canvas
+const LOADER_SIZE = 300; // Size of the loader canvas
 
 export function FluidLoader() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,114 +29,67 @@ export function FluidLoader() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Set a fixed size for the canvas
-    let width = (canvas.width = LOADER_SIZE);
-    let height = (canvas.height = LOADER_SIZE);
-    let mouse = { x: width / 2, y: height / 2, isDown: false };
-    let particles: Particle[] = [];
-    const particleCount = 150;
-    const particleSize = 1.5;
-    const particleSpeed = 1;
-    const particleColor = 'hsl(275, 100%, 50%)';
+    canvas.width = LOADER_SIZE;
+    canvas.height = LOADER_SIZE;
 
-    class Particle {
+    const ballColor = 'hsl(275, 100%, 65%)';
+    const numBalls = 6;
+    const balls: Ball[] = [];
+
+    class Ball {
       x: number;
       y: number;
       vx: number;
       vy: number;
-      size: number;
+      r: number;
 
       constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * particleSpeed;
-        this.vy = (Math.random() - 0.5) * particleSpeed;
-        this.size = Math.random() * particleSize + 0.5;
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.r = Math.random() * 20 + 20;
       }
 
       update() {
         this.x += this.vx;
         this.y += this.vy;
 
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
-
-        if (mouse.isDown) {
-          let dx = this.x - mouse.x;
-          let dy = this.y - mouse.y;
-          let dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 200) {
-            let force = (200 - dist) / 200;
-            this.vx += (dx / dist) * force * 0.25;
-            this.vy += (dy / dist) * force * 0.25;
-          }
-        }
-        this.vx *= 0.98;
-        this.vy *= 0.98;
+        if (this.x < this.r || this.x > canvas.width - this.r) this.vx *= -1;
+        if (this.y < this.r || this.y > canvas.height - this.r) this.vy *= -1;
       }
 
       draw() {
-        ctx!.fillStyle = particleColor;
         ctx!.beginPath();
-        ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx!.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx!.fillStyle = ballColor;
         ctx!.fill();
       }
     }
 
-    function init() {
-        particles = [];
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
+    for (let i = 0; i < numBalls; i++) {
+        balls.push(new Ball());
     }
 
     function animate() {
-      ctx!.clearRect(0, 0, width, height);
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
-      }
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i; j < particles.length; j++) {
-            let dx = particles[i].x - particles[j].x;
-            let dy = particles[i].y - particles[j].y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
-            if(dist < 120) {
-                ctx!.beginPath();
-                ctx!.strokeStyle = `hsla(275, 100%, 70%, ${1 - dist/120})`;
-                ctx!.lineWidth = 0.3;
-                ctx!.moveTo(particles[i].x, particles[i].y);
-                ctx!.lineTo(particles[j].x, particles[j].y);
-                ctx!.stroke();
-            }
-        }
-      }
+      ctx!.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Apply filters for the metaball effect
+      ctx!.filter = 'blur(20px) contrast(30)';
+      
+      balls.forEach(ball => {
+        ball.update();
+        ball.draw();
+      });
+      
+      // Reset filter to draw other things normally if needed
+      ctx!.filter = 'none';
+
       requestAnimationFrame(animate);
     }
     
-    // Adjust mouse coordinates to be relative to the canvas
-    const handleMouseMove = (e: MouseEvent) => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
-    }
-    
-    const handleMouseDown = () => { mouse.isDown = true; }
-    const handleMouseUp = () => { mouse.isDown = false; }
-
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    
-    init();
     animate();
 
-    return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mousedown', handleMouseDown);
-        window.removeEventListener('mouseup', handleMouseUp);
-    }
   }, [isMounted]);
 
   if (!isMounted) {
