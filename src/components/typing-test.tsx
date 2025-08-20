@@ -14,6 +14,7 @@ export function TypingTest({ text }: { text: string }) {
   const [endTime, setEndTime] = useState<number | null>(null);
   const [wpm, setWpm] = useState(0);
   const [cpm, setCpm] = useState(0);
+  const [isFocused, setIsFocused] = useState(true);
 
   const textRef = useRef(text);
   const correctChars = useRef(0);
@@ -26,6 +27,7 @@ export function TypingTest({ text }: { text: string }) {
     setWpm(0);
     setCpm(0);
     correctChars.current = 0;
+    setIsFocused(true);
   }, []);
 
   useEffect(() => {
@@ -53,7 +55,6 @@ export function TypingTest({ text }: { text: string }) {
     return Math.round((correctChars.current / userInput.length) * 100);
   }, [userInput.length]);
 
-
   useEffect(() => {
     if (status === 'running' && startTime) {
       const interval = setInterval(() => {
@@ -66,11 +67,27 @@ export function TypingTest({ text }: { text: string }) {
   }, [status, startTime, calculateWPM, calculateCPM]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent handling events from input fields
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
+    const handleFocus = () => {
+      const activeElement = document.activeElement;
+      if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') {
+        setIsFocused(false);
+      } else {
+        setIsFocused(true);
       }
+    };
+    
+    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusout', handleFocus);
+    
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+      document.removeEventListener('focusout', handleFocus);
+    };
+  }, []);
+  
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFocused) return;
       
       if (e.key === 'Escape') {
         handleRestart();
@@ -115,7 +132,7 @@ export function TypingTest({ text }: { text: string }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, text, userInput.length, handleRestart, startTime, calculateWPM, calculateCPM]);
+  }, [status, text, userInput.length, handleRestart, startTime, calculateWPM, calculateCPM, isFocused]);
 
   if (status === 'finished' && startTime && endTime) {
     const finalWpm = calculateWPM(correctChars.current, endTime! - startTime!);
@@ -130,9 +147,9 @@ export function TypingTest({ text }: { text: string }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
+    <div className="flex flex-col items-center gap-8 w-full" onClick={() => setIsFocused(true)}>
         {(status === 'running' || status === 'finished') && <LiveStats wpm={wpm} cpm={cpm} />}
-        <WordDisplay text={text} userInput={userInput} />
+        <WordDisplay text={text} userInput={userInput} isFocused={isFocused} status={status}/>
     </div>
   );
 }
