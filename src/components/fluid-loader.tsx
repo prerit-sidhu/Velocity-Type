@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
+const LOADER_SIZE = 400; // Size of the loader canvas
+
 export function FluidLoader() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,17 +28,16 @@ export function FluidLoader() {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    // Fluid simulation logic adapted from a simple example
-    // Not a physically accurate simulation, but visually appealing.
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    
+    // Set a fixed size for the canvas
+    let width = (canvas.width = LOADER_SIZE);
+    let height = (canvas.height = LOADER_SIZE);
     let mouse = { x: width / 2, y: height / 2, isDown: false };
     let particles: Particle[] = [];
-    const particleCount = 150; // Increased particle count
+    const particleCount = 150;
     const particleSize = 1.5;
     const particleSpeed = 1;
-    const particleColor = 'hsl(275, 100%, 50%)'; // Primary color
+    const particleColor = 'hsl(275, 100%, 50%)';
 
     class Particle {
       x: number;
@@ -64,13 +65,12 @@ export function FluidLoader() {
           let dx = this.x - mouse.x;
           let dy = this.y - mouse.y;
           let dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 200) { // Increased interaction radius
+          if (dist < 200) {
             let force = (200 - dist) / 200;
             this.vx += (dx / dist) * force * 0.25;
             this.vy += (dy / dist) * force * 0.25;
           }
         }
-         // Add some friction
         this.vx *= 0.98;
         this.vy *= 0.98;
       }
@@ -84,9 +84,10 @@ export function FluidLoader() {
     }
 
     function init() {
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
-      }
+        particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
     }
 
     function animate() {
@@ -100,7 +101,7 @@ export function FluidLoader() {
             let dx = particles[i].x - particles[j].x;
             let dy = particles[i].y - particles[j].y;
             let dist = Math.sqrt(dx * dx + dy * dy);
-            if(dist < 120) { // Increased connection distance
+            if(dist < 120) {
                 ctx!.beginPath();
                 ctx!.strokeStyle = `hsla(275, 100%, 70%, ${1 - dist/120})`;
                 ctx!.lineWidth = 0.3;
@@ -113,23 +114,17 @@ export function FluidLoader() {
       requestAnimationFrame(animate);
     }
     
-    const handleResize = () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        particles = [];
-        init();
-    };
-    
+    // Adjust mouse coordinates to be relative to the canvas
     const handleMouseMove = (e: MouseEvent) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
     }
     
     const handleMouseDown = () => { mouse.isDown = true; }
     const handleMouseUp = () => { mouse.isDown = false; }
 
 
-    window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
@@ -138,7 +133,6 @@ export function FluidLoader() {
     animate();
 
     return () => {
-        window.removeEventListener('resize', handleResize);
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mousedown', handleMouseDown);
         window.removeEventListener('mouseup', handleMouseUp);
@@ -158,7 +152,7 @@ export function FluidLoader() {
         }
       )}
     >
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="rounded-lg shadow-2xl" />
     </div>
   );
 }
