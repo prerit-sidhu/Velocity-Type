@@ -15,6 +15,7 @@ import {z} from 'genkit';
 
 const GenerateRandomParagraphInputSchema = z.object({
   length: z.number().default(3).describe('The approximate number of sentences in the paragraph.'),
+  seed: z.number().optional().describe('A random number to ensure uniqueness.'),
 });
 export type GenerateRandomParagraphInput = z.infer<typeof GenerateRandomParagraphInputSchema>;
 
@@ -31,7 +32,7 @@ const generateRandomParagraphPrompt = ai.definePrompt({
   name: 'generateRandomParagraphPrompt',
   input: {schema: GenerateRandomParagraphInputSchema},
   output: {schema: GenerateRandomParagraphOutputSchema},
-  prompt: `Generate a random, meaningful paragraph consisting of approximately {{length}} sentences.`,
+  prompt: `Generate a random, meaningful paragraph consisting of approximately {{length}} sentences. Use the random seed {{seed}} to ensure the paragraph is unique.`,
 });
 
 const generateRandomParagraphFlow = ai.defineFlow(

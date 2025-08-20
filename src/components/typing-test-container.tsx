@@ -25,7 +25,10 @@ export function TypingTestContainer({
       try {
         const { paragraph: newParagraph } = prompt
           ? await generateCustomParagraph({ topic: prompt })
-          : await generateRandomParagraph({ length: 5 });
+          : await generateRandomParagraph({
+              length: 5,
+              seed: Math.random(),
+            });
         setParagraph(newParagraph);
       } catch (error) {
         console.error('Failed to fetch new paragraph', error);
