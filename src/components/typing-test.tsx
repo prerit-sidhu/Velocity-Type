@@ -7,7 +7,7 @@ import { LiveStats } from './live-stats';
 
 type TestStatus = 'waiting' | 'running' | 'finished';
 
-export function TypingTest({ text }: { text: string }) {
+export function TypingTest({ text, duration }: { text: string; duration?: number; }) {
   const [status, setStatus] = useState<TestStatus>('waiting');
   const [userInput, setUserInput] = useState('');
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -17,8 +17,10 @@ export function TypingTest({ text }: { text: string }) {
   const [isFocused, setIsFocused] = useState(true);
   const [errorCount, setErrorCount] = useState(0);
   const [totalCharsTyped, setTotalCharsTyped] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(duration);
 
   const textRef = useRef(text);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const calculateCorrectChars = (currentInput: string) => {
     let count = 0;
@@ -30,6 +32,14 @@ export function TypingTest({ text }: { text: string }) {
     return count;
   };
 
+  const finishTest = useCallback(() => {
+    setStatus('finished');
+    setEndTime(Date.now());
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+  }, []);
+
   const handleRestart = useCallback(() => {
     setStatus('waiting');
     setUserInput('');
@@ -40,14 +50,18 @@ export function TypingTest({ text }: { text: string }) {
     setErrorCount(0);
     setTotalCharsTyped(0);
     setIsFocused(true);
-  }, []);
+    setTimeLeft(duration);
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+  }, [duration]);
 
   useEffect(() => {
-    if (textRef.current !== text) {
+    if (textRef.current !== text || duration !== timeLeft) {
       handleRestart();
       textRef.current = text;
     }
-  }, [text, handleRestart]);
+  }, [text, duration, handleRestart, timeLeft]);
 
   const calculateWPM = useCallback((chars: number, timeMs: number) => {
     if (timeMs === 0) return 0;
@@ -70,15 +84,34 @@ export function TypingTest({ text }: { text: string }) {
 
   useEffect(() => {
     if (status === 'running' && startTime) {
-      const interval = setInterval(() => {
+      const liveTimer = setInterval(() => {
         const timeElapsed = Date.now() - startTime;
         const correctChars = calculateCorrectChars(userInput);
         setWpm(calculateWPM(correctChars, timeElapsed));
         setCpm(calculateCPM(correctChars, timeElapsed));
       }, 1000);
-      return () => clearInterval(interval);
+      return () => clearInterval(liveTimer);
     }
   }, [status, startTime, calculateWPM, calculateCPM, userInput]);
+
+  useEffect(() => {
+    if (status === 'running' && duration) {
+       timerIntervalRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev !== undefined && prev > 1) {
+            return prev - 1;
+          }
+          finishTest();
+          return 0;
+        });
+      }, 1000);
+      return () => {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+        }
+      };
+    }
+  }, [status, duration, finishTest]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -116,18 +149,21 @@ export function TypingTest({ text }: { text: string }) {
           setStatus('running');
           setStartTime(Date.now());
         }
-
-        setTotalCharsTyped((prev) => prev + 1);
-
-        if (e.key !== text[userInput.length]) {
-          setErrorCount((prev) => prev + 1);
-        }
         
         setUserInput((prev) => {
+          if (prev.length >= text.length) {
+            if (!duration) finishTest();
+            return prev;
+          }
+
+          if (e.key !== text[prev.length]) {
+            setErrorCount((prevCount) => prevCount + 1);
+          }
+          setTotalCharsTyped((prevTotal) => prevTotal + 1);
+
           const newUserInput = prev + e.key;
-          if (newUserInput.length >= text.length) {
-            setStatus('finished');
-            setEndTime(Date.now());
+          if (newUserInput.length >= text.length && !duration) {
+            finishTest();
           }
           return newUserInput;
         });
@@ -140,11 +176,12 @@ export function TypingTest({ text }: { text: string }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, text, handleRestart, startTime, isFocused, userInput.length]);
+  }, [status, text, handleRestart, startTime, isFocused, userInput.length, duration, finishTest]);
 
-  if (status === 'finished' && startTime && endTime) {
+  if (status === 'finished' && startTime) {
+    const timeTaken = (endTime || Date.now()) - startTime;
     const correctChars = calculateCorrectChars(userInput);
-    const finalWpm = calculateWPM(correctChars, endTime - startTime);
+    const finalWpm = calculateWPM(correctChars, timeTaken);
     const finalAccuracy = calculateAccuracy();
     return (
       <Results
@@ -157,7 +194,19 @@ export function TypingTest({ text }: { text: string }) {
 
   return (
     <div className="flex flex-col items-center gap-8 w-full" onClick={() => setIsFocused(true)}>
-        {(status === 'running' || status === 'finished') && <LiveStats wpm={wpm} cpm={cpm} />}
+        {(status === 'running' || status === 'finished' || duration) && (
+            <div className="flex w-full items-center justify-center gap-4 text-center">
+              {duration && (
+                <div className="rounded-lg bg-card p-4 shadow-sm border w-32">
+                  <p className="text-sm text-muted-foreground">Time</p>
+                  <p className="text-3xl font-bold text-primary transition-all duration-300">
+                    {timeLeft}
+                  </p>
+                </div>
+              )}
+              <LiveStats wpm={wpm} cpm={cpm} />
+            </div>
+        )}
         <WordDisplay text={text} userInput={userInput} isFocused={isFocused} status={status}/>
     </div>
   );

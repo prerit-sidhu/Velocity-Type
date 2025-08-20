@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Loader2, RefreshCw, Wand2 } from 'lucide-react';
+import { Loader2, RefreshCw, Wand2, Timer, FileText } from 'lucide-react';
 import { generateRandomParagraph } from '@/ai/flows/generate-paragraph';
 import { generateCustomParagraph } from '@/ai/flows/generate-custom-paragraph';
 import { TypingTest } from './typing-test';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+type TestMode = 'time' | 'words';
+type TestTime = 30 | 60 | 120;
 
 export function TypingTestContainer({
   initialParagraph,
@@ -19,14 +23,18 @@ export function TypingTestContainer({
   const { toast } = useToast();
   const promptInputRef = useRef<HTMLInputElement>(null);
 
+  const [testMode, setTestMode] = useState<TestMode>('words');
+  const [testTime, setTestTime] = useState<TestTime>(60);
+
   const fetchNewParagraph = useCallback(
     async (prompt?: string) => {
       setIsLoading(true);
       try {
+        const paragraphLength = testMode === 'time' ? 20 : 5;
         const { paragraph: newParagraph } = prompt
           ? await generateCustomParagraph({ topic: prompt })
           : await generateRandomParagraph({
-              length: 5,
+              length: paragraphLength,
               seed: Math.random(),
             });
         setParagraph(newParagraph);
@@ -41,7 +49,7 @@ export function TypingTestContainer({
         setIsLoading(false);
       }
     },
-    [toast]
+    [toast, testMode]
   );
 
   const handleCustomGenerate = () => {
@@ -56,8 +64,53 @@ export function TypingTestContainer({
     }
   };
 
+  const handleModeChange = (mode: TestMode) => {
+    setTestMode(mode);
+    fetchNewParagraph();
+  };
+
+  const handleTimeChange = (time: TestTime) => {
+    setTestTime(time);
+    setTestMode('time');
+    fetchNewParagraph();
+  };
+
   return (
-    <div className="container mx-auto flex flex-1 flex-col items-center justify-center gap-8 px-4 py-12">
+    <div className="container mx-auto flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
+      <div className="flex items-center gap-2 p-1 rounded-lg bg-muted">
+         <Button
+            variant={testMode === 'time' ? 'outline' : 'ghost'}
+            className={cn("gap-2", testMode === 'time' && "bg-background shadow-sm")}
+            onClick={() => handleModeChange('time')}
+          >
+            <Timer />
+            Time
+          </Button>
+          <Button
+            variant={testMode === 'words' ? 'outline' : 'ghost'}
+            className={cn("gap-2", testMode === 'words' && "bg-background shadow-sm")}
+            onClick={() => handleModeChange('words')}
+          >
+            <FileText />
+            Words
+          </Button>
+      </div>
+
+       {testMode === 'time' && (
+        <div className="flex items-center gap-2">
+          {[30, 60, 120].map((time) => (
+            <Button
+              key={time}
+              variant={testTime === time ? 'default' : 'secondary'}
+              onClick={() => handleTimeChange(time as TestTime)}
+            >
+              {time}s
+            </Button>
+          ))}
+        </div>
+      )}
+
+
       <div className="w-full max-w-4xl">
         {isLoading ? (
           <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed bg-card text-lg">
@@ -65,7 +118,7 @@ export function TypingTestContainer({
             Generating new text...
           </div>
         ) : (
-          <TypingTest text={paragraph} />
+          <TypingTest text={paragraph} duration={testMode === 'time' ? testTime : undefined} />
         )}
       </div>
 
