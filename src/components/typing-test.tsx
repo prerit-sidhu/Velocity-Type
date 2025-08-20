@@ -19,6 +19,16 @@ export function TypingTest({ text }: { text: string }) {
   const textRef = useRef(text);
   const correctChars = useRef(0);
 
+  const calculateCorrectChars = (currentInput: string) => {
+    let count = 0;
+    for (let i = 0; i < currentInput.length; i++) {
+      if (currentInput[i] === text[i]) {
+        count++;
+      }
+    }
+    return count;
+  };
+
   const handleRestart = useCallback(() => {
     setStatus('waiting');
     setUserInput('');
@@ -51,7 +61,7 @@ export function TypingTest({ text }: { text: string }) {
   }, []);
 
   const calculateAccuracy = useCallback(() => {
-    if (correctChars.current === 0 || userInput.length === 0) return 100;
+    if (userInput.length === 0) return 100;
     return Math.round((correctChars.current / userInput.length) * 100);
   }, [userInput.length]);
 
@@ -59,12 +69,13 @@ export function TypingTest({ text }: { text: string }) {
     if (status === 'running' && startTime) {
       const interval = setInterval(() => {
         const timeElapsed = Date.now() - startTime;
+        correctChars.current = calculateCorrectChars(userInput);
         setWpm(calculateWPM(correctChars.current, timeElapsed));
         setCpm(calculateCPM(correctChars.current, timeElapsed));
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [status, startTime, calculateWPM, calculateCPM]);
+  }, [status, startTime, calculateWPM, calculateCPM, userInput]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -97,22 +108,23 @@ export function TypingTest({ text }: { text: string }) {
 
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        if (status === 'waiting') {
-          setStatus('running');
-          setStartTime(Date.now());
-        }
+        
         setUserInput((prev) => {
           const newUserInput = prev + e.key;
-
-          if (newUserInput.length <= text.length) {
-            if (e.key === text[newUserInput.length - 1]) {
-                correctChars.current++;
-            }
+          if (newUserInput.length > text.length) {
+            return prev;
           }
+
+          if (status === 'waiting') {
+            setStatus('running');
+            setStartTime(Date.now());
+          }
+          
+          correctChars.current = calculateCorrectChars(newUserInput);
           
           if (newUserInput.length === text.length) {
             setStatus('finished');
-            const finalTime = Date.now() - startTime!;
+            const finalTime = Date.now() - (startTime || Date.now());
             setEndTime(Date.now());
             setWpm(calculateWPM(correctChars.current, finalTime));
             setCpm(calculateCPM(correctChars.current, finalTime));
@@ -121,18 +133,17 @@ export function TypingTest({ text }: { text: string }) {
         });
       } else if (e.key === 'Backspace') {
         e.preventDefault();
-        if (userInput.length > 0) {
-            if (userInput.slice(-1) === text[userInput.length - 1]) {
-                correctChars.current--;
-            }
-            setUserInput((prev) => prev.slice(0, -1));
-        }
+        setUserInput((prev) => {
+            const newUserInput = prev.slice(0, -1);
+            correctChars.current = calculateCorrectChars(newUserInput);
+            return newUserInput;
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, text, userInput.length, handleRestart, startTime, calculateWPM, calculateCPM, isFocused]);
+  }, [status, text, handleRestart, startTime, calculateWPM, calculateCPM, isFocused]);
 
   if (status === 'finished' && startTime && endTime) {
     const finalWpm = calculateWPM(correctChars.current, endTime! - startTime!);
