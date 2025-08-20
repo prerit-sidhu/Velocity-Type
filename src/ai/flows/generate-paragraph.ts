@@ -32,7 +32,7 @@ const generateRandomParagraphPrompt = ai.definePrompt({
   name: 'generateRandomParagraphPrompt',
   input: {schema: GenerateRandomParagraphInputSchema},
   output: {schema: GenerateRandomParagraphOutputSchema},
-  prompt: `Generate a random, meaningful paragraph consisting of approximately {{length}} sentences. Use the random seed {{seed}} to ensure the paragraph is unique.`,
+  prompt: `Generate a completely random and unique paragraph suitable for a typing test. The paragraph should be approximately {{length}} sentences long. Use the following random seed to ensure a different result each time: {{seed}}. The paragraph should be on a random topic and should not be a well-known quote or text.`,
 });
 
 const generateRandomParagraphFlow = ai.defineFlow(
