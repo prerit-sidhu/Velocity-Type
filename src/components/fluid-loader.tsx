@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Keyboard, Mouse } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function FluidLoader() {
@@ -13,7 +13,7 @@ export function FluidLoader() {
     // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -31,10 +31,7 @@ export function FluidLoader() {
         }
       )}
     >
-      <div className="relative h-24 w-24">
-        <Keyboard className="absolute inset-0 m-auto h-20 w-20 animate-fade-in-out text-primary" />
-        <Mouse className="absolute inset-0 m-auto h-20 w-20 animate-fade-in-out animation-delay-2000 text-primary" />
-      </div>
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
     </div>
   );
 }
