@@ -41,7 +41,7 @@ export function WordDisplay({ text, userInput, isFocused, status }: WordDisplayP
   }, [characters, userInput.length]);
 
   return (
-    <div className="bg-card p-6 sm:p-8 rounded-lg shadow-md border w-full relative">
+    <div className="bg-card p-6 sm:p-8 rounded-xl shadow-lg border w-full relative transition-all duration-300 hover:shadow-2xl">
       <div className={cn(
         "text-xl sm:text-2xl font-mono tracking-wide leading-relaxed text-left break-all transition-all duration-300",
         { 'blur-sm': !isFocused && status !== 'finished' }
@@ -50,7 +50,7 @@ export function WordDisplay({ text, userInput, isFocused, status }: WordDisplayP
           {typedCharacters}
           <span 
             className={cn(
-              "inline-block w-0.5 h-7 sm:h-8 bg-accent animate-pulse", 
+              "inline-block w-0.5 h-7 sm:h-8 bg-accent animate-pulse rounded-full", 
               { 'hidden': !isFocused || status === 'finished' }
             )} 
           />

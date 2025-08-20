@@ -77,10 +77,10 @@ export function TypingTestContainer({
 
   return (
     <div className="container mx-auto flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
-      <div className="flex items-center gap-2 p-1 rounded-lg bg-muted">
+      <div className="flex items-center gap-2 p-1 rounded-xl bg-muted">
          <Button
             variant={testMode === 'time' ? 'outline' : 'ghost'}
-            className={cn("gap-2", testMode === 'time' && "bg-background shadow-sm")}
+            className={cn("gap-2 transition-all", testMode === 'time' && "bg-background shadow-md")}
             onClick={() => handleModeChange('time')}
           >
             <Timer />
@@ -88,7 +88,7 @@ export function TypingTestContainer({
           </Button>
           <Button
             variant={testMode === 'words' ? 'outline' : 'ghost'}
-            className={cn("gap-2", testMode === 'words' && "bg-background shadow-sm")}
+            className={cn("gap-2 transition-all", testMode === 'words' && "bg-background shadow-md")}
             onClick={() => handleModeChange('words')}
           >
             <FileText />
@@ -113,7 +113,7 @@ export function TypingTestContainer({
 
       <div className="w-full max-w-4xl">
         {isLoading ? (
-          <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed bg-card text-lg">
+          <div className="flex h-48 items-center justify-center rounded-xl border-2 border-dashed bg-card text-lg">
             <Loader2 className="mr-2 h-6 w-6 animate-spin" />
             Generating new text...
           </div>
