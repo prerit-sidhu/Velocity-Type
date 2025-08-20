@@ -33,9 +33,9 @@ export function FluidLoader() {
     let height = (canvas.height = window.innerHeight);
     let mouse = { x: width / 2, y: height / 2, isDown: false };
     let particles: Particle[] = [];
-    const particleCount = 100;
-    const particleSize = 1;
-    const particleSpeed = 2;
+    const particleCount = 150; // Increased particle count
+    const particleSize = 1.5;
+    const particleSpeed = 1;
     const particleColor = 'hsl(275, 100%, 50%)'; // Primary color
 
     class Particle {
@@ -64,12 +64,15 @@ export function FluidLoader() {
           let dx = this.x - mouse.x;
           let dy = this.y - mouse.y;
           let dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            let force = (150 - dist) / 150;
-            this.vx += (dx / dist) * force * 0.5;
-            this.vy += (dy / dist) * force * 0.5;
+          if (dist < 200) { // Increased interaction radius
+            let force = (200 - dist) / 200;
+            this.vx += (dx / dist) * force * 0.25;
+            this.vy += (dy / dist) * force * 0.25;
           }
         }
+         // Add some friction
+        this.vx *= 0.98;
+        this.vy *= 0.98;
       }
 
       draw() {
@@ -97,10 +100,10 @@ export function FluidLoader() {
             let dx = particles[i].x - particles[j].x;
             let dy = particles[i].y - particles[j].y;
             let dist = Math.sqrt(dx * dx + dy * dy);
-            if(dist < 100) {
+            if(dist < 120) { // Increased connection distance
                 ctx!.beginPath();
-                ctx!.strokeStyle = `hsla(275, 100%, 50%, ${1 - dist/100})`;
-                ctx!.lineWidth = 0.2;
+                ctx!.strokeStyle = `hsla(275, 100%, 70%, ${1 - dist/120})`;
+                ctx!.lineWidth = 0.3;
                 ctx!.moveTo(particles[i].x, particles[i].y);
                 ctx!.lineTo(particles[j].x, particles[j].y);
                 ctx!.stroke();
@@ -156,9 +159,6 @@ export function FluidLoader() {
       )}
     >
       <canvas ref={canvasRef} className="absolute inset-0" />
-      <h1 className="text-4xl sm:text-6xl font-headline font-bold text-primary animate-pulse z-10">
-        VelocityType
-      </h1>
     </div>
   );
 }
