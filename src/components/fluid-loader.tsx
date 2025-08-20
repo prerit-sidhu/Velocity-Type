@@ -6,10 +6,8 @@ import { cn } from '@/lib/utils';
 
 export function FluidLoader() {
   const [isLoading, setIsLoading] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
     // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -17,10 +15,6 @@ export function FluidLoader() {
 
     return () => clearTimeout(timer);
   }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <div
