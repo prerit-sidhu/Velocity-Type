@@ -41,11 +41,11 @@ export function WordDisplay({ text, userInput, isFocused, status }: WordDisplayP
   }, [characters, userInput.length]);
 
   return (
-    <div className={cn(
-      "bg-card p-6 sm:p-8 rounded-lg shadow-md border w-full transition-all duration-300",
-      { 'blur-sm': !isFocused && status !== 'finished' }
-    )}>
-      <div className="text-xl sm:text-2xl font-mono tracking-wide leading-relaxed text-left break-all relative">
+    <div className="bg-card p-6 sm:p-8 rounded-lg shadow-md border w-full relative">
+      <div className={cn(
+        "text-xl sm:text-2xl font-mono tracking-wide leading-relaxed text-left break-all transition-all duration-300",
+        { 'blur-sm': !isFocused && status !== 'finished' }
+      )}>
         <p>
           {typedCharacters}
           <span 
@@ -56,12 +56,12 @@ export function WordDisplay({ text, userInput, isFocused, status }: WordDisplayP
           />
           {remainingCharacters}
         </p>
-        {!isFocused && status !== 'finished' && (
-           <div className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-lg">
-             <p className="text-foreground font-medium bg-background/80 px-4 py-2 rounded-md">Click to focus</p>
-           </div>
-        )}
       </div>
+      {!isFocused && status !== 'finished' && (
+         <div className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-lg">
+           <p className="text-foreground font-medium bg-background/80 px-4 py-2 rounded-md">Click to focus</p>
+         </div>
+      )}
     </div>
   );
 }
