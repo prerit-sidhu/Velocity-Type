@@ -20,7 +20,7 @@ export function Header() {
             <span className="font-bold font-headline text-lg">VelocityType</span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
+        <div className="flex flex-1 items-center justify-end space-x-2 mr-2">
           <ThemeToggle />
           <Dialog>
             <DialogTrigger asChild>
