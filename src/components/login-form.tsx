@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  signOut,
   updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
@@ -73,12 +75,23 @@ export function LoginForm() {
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/');
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully!',
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth);
+        toast({
+          title: 'Email Not Verified',
+          description: 'Please verify your email address before logging in.',
+          variant: 'destructive',
+          duration: 8000
+        });
+      } else {
+        router.push('/');
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully!',
+        });
+      }
     } catch (error: any) {
       toast({
         title: 'Authentication Error',
