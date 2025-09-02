@@ -19,6 +19,8 @@ export function Header() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      // Artificial delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await signOut(auth);
       router.push('/');
     } catch (error) {
