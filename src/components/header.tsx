@@ -22,7 +22,7 @@ export function Header() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2 ml-2">
-            <span className="font-bold font-headline text-lg">VelocityType</span>
+            <span className="font-bold font-headline text-lg transition-colors hover:text-primary">VelocityType</span>
           </Link>
           <nav className="flex items-center gap-1 text-sm">
              <Button variant="ghost" asChild>
