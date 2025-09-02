@@ -283,7 +283,7 @@ export function LoginForm() {
               </CardFooter>
             </form>
           </Form>
-        </card>
+        </Card>
       </TabsContent>
     </Tabs>
   );
