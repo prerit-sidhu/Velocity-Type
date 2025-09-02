@@ -26,6 +26,7 @@ import { Loader2 } from 'lucide-react';
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -37,6 +38,16 @@ export function LoginForm() {
         toast({
             title: 'Username Required',
             description: 'Please enter a username to sign up.',
+            variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+        toast({
+            title: 'Passwords Do Not Match',
+            description: 'Please make sure your passwords match.',
             variant: 'destructive',
         });
         setIsLoading(false);
@@ -159,6 +170,16 @@ export function LoginForm() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+              <Input
+                id="signup-confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
