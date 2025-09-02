@@ -7,6 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
@@ -40,6 +41,9 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
   return (
     <div className="rounded-xl border bg-card text-card-foreground shadow-lg">
       <Table>
+        {data.length === 0 && (
+            <TableCaption>No scores recorded yet. Be the first!</TableCaption>
+        )}
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">Rank</TableHead>
