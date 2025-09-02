@@ -137,6 +137,9 @@ export function LoginForm() {
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
               />
+              <p className="text-xs text-muted-foreground px-1">
+                This will be your name on the leaderboard and cannot be changed.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
