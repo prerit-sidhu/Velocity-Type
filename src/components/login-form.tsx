@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
@@ -96,10 +97,15 @@ export function LoginForm() {
         data.password
       );
       await updateProfile(userCredential.user, { displayName: data.username });
-      router.push('/');
+      await sendEmailVerification(userCredential.user);
+      
+      setActiveTab('login');
+      signUpForm.reset();
+
       toast({
-        title: 'Success',
-        description: 'Account created successfully!',
+        title: 'Account Created!',
+        description: 'Please check your email to verify your account before logging in.',
+        duration: 8000
       });
     } catch (error: any) {
       toast({
@@ -277,7 +283,7 @@ export function LoginForm() {
               </CardFooter>
             </form>
           </Form>
-        </Card>
+        </card>
       </TabsContent>
     </Tabs>
   );
