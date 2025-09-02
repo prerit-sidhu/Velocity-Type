@@ -3,7 +3,6 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { FluidLoader } from '@/components/fluid-loader';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/context/auth-context';
@@ -39,7 +38,6 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
-          <FluidLoader />
           <div className="relative flex min-h-screen flex-col bg-background">
             <Header />
             <main className="flex-1">
