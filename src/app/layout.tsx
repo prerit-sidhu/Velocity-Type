@@ -7,6 +7,7 @@ import { FluidLoader } from '@/components/fluid-loader';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/context/auth-context';
+import { PageWrapper } from '@/components/page-wrapper';
 
 export const metadata: Metadata = {
   title: 'VelocityType',
@@ -41,7 +42,9 @@ export default function RootLayout({
           <FluidLoader />
           <div className="relative flex min-h-screen flex-col bg-background">
             <Header />
-            <main className="flex-1 animate-page-in">{children}</main>
+            <main className="flex-1">
+              <PageWrapper>{children}</PageWrapper>
+            </main>
             <Footer />
           </div>
           <Toaster />
