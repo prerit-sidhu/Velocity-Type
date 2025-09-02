@@ -10,21 +10,30 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export function Header() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Artificial delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       await signOut(auth);
       router.push('/');
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
     } catch (error) {
       console.error('Error logging out:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to log out. Please try again.',
+        variant: 'destructive',
+      });
       setIsLoggingOut(false);
     }
   };
