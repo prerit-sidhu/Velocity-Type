@@ -22,6 +22,8 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
   const [errorCount, setErrorCount] = useState(0);
   const [totalCharsTyped, setTotalCharsTyped] = useState(0);
   const [timeLeft, setTimeLeft] = useState(duration);
+  const [isScoreSaved, setIsScoreSaved] = useState(false);
+
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,7 +60,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
   }, [totalCharsTyped, errorCount]);
 
   const saveScore = useCallback(async (finalWpm: number, finalAccuracy: number) => {
-    if (user) {
+    if (user && !isScoreSaved) {
       try {
         await addDoc(collection(db, 'scores'), {
           userId: user.uid,
@@ -69,6 +71,11 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
           text,
           duration,
         });
+        toast({
+            title: "Score Saved!",
+            description: "Your result has been added to the leaderboard.",
+        })
+        setIsScoreSaved(true);
       } catch (error) {
         console.error("Error adding document: ", error);
         toast({
@@ -78,7 +85,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
         })
       }
     }
-  }, [user, text, duration, toast]);
+  }, [user, text, duration, toast, isScoreSaved]);
 
 
   const finishTest = useCallback(() => {
@@ -88,17 +95,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
-
-    if (startTime) {
-      const timeTaken = finalEndTime - startTime;
-      const correctChars = calculateCorrectChars(userInput);
-      const finalWpm = calculateWPM(correctChars, timeTaken);
-      const finalAccuracy = calculateAccuracy();
-      if(finalWpm > 0) { // Only save meaningful scores
-        saveScore(finalWpm, finalAccuracy);
-      }
-    }
-  }, [startTime, userInput, calculateWPM, calculateAccuracy, saveScore, calculateCorrectChars]);
+  }, []);
 
   const handleRestart = useCallback(() => {
     setStatus('waiting');
@@ -110,6 +107,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
     setErrorCount(0);
     setTotalCharsTyped(0);
     setIsFocused(true);
+    setIsScoreSaved(false);
     setTimeLeft(duration);
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
@@ -224,11 +222,27 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
     const correctChars = calculateCorrectChars(userInput);
     const finalWpm = calculateWPM(correctChars, timeTaken);
     const finalAccuracy = calculateAccuracy();
+
+    const handleSaveScore = () => {
+        if (finalWpm > 0) {
+            saveScore(finalWpm, finalAccuracy);
+        } else {
+            toast({
+                title: "Cannot Save Score",
+                description: "Your WPM is 0, so this score cannot be saved.",
+                variant: "destructive"
+            })
+        }
+    }
+
     return (
       <Results
         wpm={finalWpm}
         accuracy={finalAccuracy}
         onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
+        isLoggedIn={!!user}
+        isScoreSaved={isScoreSaved}
       />
     );
   }
