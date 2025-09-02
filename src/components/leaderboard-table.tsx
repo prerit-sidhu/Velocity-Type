@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
+import { cn } from '@/lib/utils';
 
 interface Score {
   id: string;
@@ -55,17 +56,17 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
         </TableHeader>
         <TableBody>
           {data.map((score, index) => (
-            <TableRow key={score.id} className={score.userId === user?.uid ? 'bg-accent/50' : ''}>
+            <TableRow key={score.id} className={cn(score.userId === user?.uid && "text-primary font-bold")}>
               <TableCell className="font-medium">{index + 1}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarFallback>{getInitials(score.username)}</AvatarFallback>
                   </Avatar>
-                  <span className="truncate font-medium">{score.username}</span>
+                  <span className="truncate">{score.username}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-right font-bold text-primary text-lg">{score.wpm}</TableCell>
+              <TableCell className="text-right text-lg">{score.wpm}</TableCell>
               <TableCell className="text-right">{score.accuracy}%</TableCell>
               <TableCell className="text-right">{score.timestamp.toLocaleDateString()}</TableCell>
             </TableRow>
