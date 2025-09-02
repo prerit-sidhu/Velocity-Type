@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, X } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from './ui/form';
 
 const loginSchema = z.object({
@@ -182,7 +182,16 @@ export function LoginForm() {
         <TabsTrigger value="signup">Sign Up</TabsTrigger>
       </TabsList>
       <TabsContent value="login">
-        <Card>
+        <Card className="relative">
+          <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-10 rounded-full h-8 w-8"
+              onClick={() => router.back()}
+              aria-label="Close"
+          >
+              <X className="h-5 w-5" />
+          </Button>
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(handleLogin)}>
               <CardHeader>
@@ -263,7 +272,16 @@ export function LoginForm() {
         </Card>
       </TabsContent>
       <TabsContent value="signup">
-        <Card>
+        <Card className="relative">
+           <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-10 rounded-full h-8 w-8"
+              onClick={() => router.back()}
+              aria-label="Close"
+          >
+              <X className="h-5 w-5" />
+          </Button>
           <Form {...signUpForm}>
             <form onSubmit={signUpForm.handleSubmit(handleSignUp)}>
               <CardHeader>
