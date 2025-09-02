@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -7,14 +8,23 @@ import { useAuth } from '@/context/auth-context';
 import { auth } from '@/lib/firebase-client';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export function Header() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
+    setIsLoggingOut(true);
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -34,7 +44,8 @@ export function Header() {
           <ThemeToggle />
           {!loading &&
             (user ? (
-              <Button onClick={handleLogout} variant="outline">
+              <Button onClick={handleLogout} variant="outline" disabled={isLoggingOut}>
+                {isLoggingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Logout
               </Button>
             ) : (
