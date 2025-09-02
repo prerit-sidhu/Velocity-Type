@@ -14,6 +14,7 @@ import { useAuth } from '@/context/auth-context';
 interface Score {
   id: string;
   userId: string;
+  username: string;
   wpm: number;
   accuracy: number;
   timestamp: Date;
@@ -23,9 +24,13 @@ interface LeaderboardTableProps {
   data: Score[];
 }
 
-function getInitials(email: string) {
-    if (!email) return 'U';
-    return email.substring(0, 2).toUpperCase();
+function getInitials(name: string) {
+    if (!name) return 'A';
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
 }
 
 
@@ -51,10 +56,9 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    {/* Placeholder for user avatar */}
-                    <AvatarFallback>{getInitials(score.userId)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(score.username)}</AvatarFallback>
                   </Avatar>
-                  <span className="truncate">{score.userId.substring(0, 12)}...</span>
+                  <span className="truncate font-medium">{score.username}</span>
                 </div>
               </TableCell>
               <TableCell className="text-right font-bold text-primary text-lg">{score.wpm}</TableCell>

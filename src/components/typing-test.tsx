@@ -62,6 +62,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
       try {
         await addDoc(collection(db, 'scores'), {
           userId: user.uid,
+          username: user.displayName,
           wpm: finalWpm,
           accuracy: finalAccuracy,
           timestamp: serverTimestamp(),

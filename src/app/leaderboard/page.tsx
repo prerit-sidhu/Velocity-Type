@@ -13,6 +13,7 @@ async function getLeaderboardData() {
     return {
       id: doc.id,
       userId: data.userId,
+      username: data.username || 'Anonymous',
       wpm: data.wpm,
       accuracy: data.accuracy,
       timestamp: data.timestamp.toDate(),

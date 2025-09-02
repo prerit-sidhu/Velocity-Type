@@ -4,6 +4,7 @@ import { useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -25,15 +26,28 @@ import { Loader2 } from 'lucide-react';
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleAuth = async (isSignUp: boolean) => {
     setIsLoading(true);
+    if (isSignUp && !username) {
+        toast({
+            title: 'Username Required',
+            description: 'Please enter a username to sign up.',
+            variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+    }
+
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: username });
+
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -113,6 +127,17 @@ export function LoginForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="signup-username">Username</Label>
+              <Input
+                id="signup-username"
+                type="text"
+                placeholder="Your Name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
               <Input
