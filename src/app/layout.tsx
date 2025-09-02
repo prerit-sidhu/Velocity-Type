@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer';
 import { FluidLoader } from '@/components/fluid-loader';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import { AuthProvider } from '@/context/auth-context';
 
 export const metadata: Metadata = {
   title: 'VelocityType',
@@ -36,13 +37,15 @@ export default function RootLayout({
           fontHeadline.variable
         )}
       >
-        <FluidLoader />
-        <div className="relative flex min-h-screen flex-col bg-background">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <Toaster />
+        <AuthProvider>
+          <FluidLoader />
+          <div className="relative flex min-h-screen flex-col bg-background">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

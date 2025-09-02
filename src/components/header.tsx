@@ -1,17 +1,20 @@
 import Link from 'next/link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-  DialogFooter,
-} from './ui/dialog';
+import { useAuth } from '@/context/auth-context';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
@@ -19,25 +22,27 @@ export function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2 ml-2">
             <span className="font-bold font-headline text-lg">VelocityType</span>
           </Link>
+          <nav className="flex items-center gap-6 text-sm">
+            <Link
+              href="/leaderboard"
+              className="transition-colors hover:text-foreground/80 text-foreground/60"
+            >
+              Leaderboard
+            </Link>
+          </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2 mr-2">
           <ThemeToggle />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">Login</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Login</DialogTitle>
-                <DialogDescription>
-                  User authentication and leaderboards are coming soon! This feature is currently under development.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <p className="text-sm text-muted-foreground">Stay tuned for updates.</p>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {!loading &&
+            (user ? (
+              <Button onClick={handleLogout} variant="outline">
+                Logout
+              </Button>
+            ) : (
+              <Button asChild variant="outline">
+                <Link href="/login">Login</Link>
+              </Button>
+            ))}
         </div>
       </div>
     </header>

@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WordDisplay } from './word-display';
 import { Results } from './results';
 import { LiveStats } from './live-stats';
+import { useAuth } from '@/context/auth-context';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 type TestStatus = 'waiting' | 'running' | 'finished';
 
@@ -19,6 +23,8 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
   const [totalCharsTyped, setTotalCharsTyped] = useState(0);
   const [timeLeft, setTimeLeft] = useState(duration);
 
+  const { user } = useAuth();
+  const { toast } = useToast();
   const textRef = useRef(text);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -32,13 +38,66 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
     return count;
   };
 
+  const calculateWPM = useCallback((chars: number, timeMs: number) => {
+    if (timeMs === 0) return 0;
+    const timeInMinutes = timeMs / 1000 / 60;
+    const wordCount = chars / 5;
+    return Math.round(wordCount / timeInMinutes);
+  }, []);
+  
+  const calculateCPM = useCallback((chars: number, timeMs: number) => {
+    if (timeMs === 0) return 0;
+    const timeInMinutes = timeMs / 1000 / 60;
+    return Math.round(chars / timeInMinutes);
+  }, []);
+  
+  const calculateAccuracy = useCallback(() => {
+    if (totalCharsTyped === 0) return 100;
+    const correctChars = totalCharsTyped - errorCount;
+    return Math.round((correctChars / totalCharsTyped) * 100);
+  }, [totalCharsTyped, errorCount]);
+
+  const saveScore = useCallback(async (finalWpm: number, finalAccuracy: number) => {
+    if (user) {
+      try {
+        await addDoc(collection(db, 'scores'), {
+          userId: user.uid,
+          wpm: finalWpm,
+          accuracy: finalAccuracy,
+          timestamp: serverTimestamp(),
+          text,
+          duration,
+        });
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        toast({
+          title: "Error",
+          description: "Could not save your score.",
+          variant: "destructive"
+        })
+      }
+    }
+  }, [user, text, duration, toast]);
+
+
   const finishTest = useCallback(() => {
     setStatus('finished');
-    setEndTime(Date.now());
+    const finalEndTime = Date.now();
+    setEndTime(finalEndTime);
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
-  }, []);
+
+    if (startTime) {
+      const timeTaken = finalEndTime - startTime;
+      const correctChars = calculateCorrectChars(userInput);
+      const finalWpm = calculateWPM(correctChars, timeTaken);
+      const finalAccuracy = calculateAccuracy();
+      if(finalWpm > 0) { // Only save meaningful scores
+        saveScore(finalWpm, finalAccuracy);
+      }
+    }
+  }, [startTime, userInput, calculateWPM, calculateAccuracy, saveScore, calculateCorrectChars]);
 
   const handleRestart = useCallback(() => {
     setStatus('waiting');
@@ -61,26 +120,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
       handleRestart();
       textRef.current = text;
     }
-  }, [text, duration, handleRestart]);
-
-  const calculateWPM = useCallback((chars: number, timeMs: number) => {
-    if (timeMs === 0) return 0;
-    const timeInMinutes = timeMs / 1000 / 60;
-    const wordCount = chars / 5;
-    return Math.round(wordCount / timeInMinutes);
-  }, []);
-
-  const calculateCPM = useCallback((chars: number, timeMs: number) => {
-    if (timeMs === 0) return 0;
-    const timeInMinutes = timeMs / 1000 / 60;
-    return Math.round(chars / timeInMinutes);
-  }, []);
-
-  const calculateAccuracy = useCallback(() => {
-    if (totalCharsTyped === 0) return 100;
-    const correctChars = totalCharsTyped - errorCount;
-    return Math.round((correctChars / totalCharsTyped) * 100);
-  }, [totalCharsTyped, errorCount]);
+  }, [text, duration, handleRestart, timeLeft]);
 
   useEffect(() => {
     if (status === 'running' && startTime) {
@@ -92,7 +132,7 @@ export function TypingTest({ text, duration }: { text: string; duration?: number
       }, 1000);
       return () => clearInterval(liveTimer);
     }
-  }, [status, startTime, calculateWPM, calculateCPM, userInput]);
+  }, [status, startTime, calculateWPM, calculateCPM, userInput, calculateCorrectChars]);
 
   useEffect(() => {
     if (status === 'running' && duration) {
