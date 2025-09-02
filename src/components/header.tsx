@@ -22,11 +22,14 @@ export function Header() {
     setIsLoggingOut(true);
     try {
       await signOut(auth);
-      router.push('/');
-      toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out.',
-      });
+      // A small delay to make the transition smoother
+      setTimeout(() => {
+        router.push('/');
+        toast({
+          title: 'Logged Out',
+          description: 'You have been successfully logged out.',
+        });
+      }, 1000);
     } catch (error) {
       console.error('Error logging out:', error);
       toast({
@@ -60,9 +63,14 @@ export function Header() {
                 Logout
               </Button>
             ) : (
-              <Button asChild variant="outline">
-                <Link href="/login">Login</Link>
-              </Button>
+              <>
+                <Button asChild variant="ghost">
+                    <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/login">Sign Up</Link>
+                </Button>
+              </>
             ))}
         </div>
       </div>
