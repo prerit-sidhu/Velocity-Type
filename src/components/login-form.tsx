@@ -11,6 +11,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 import { useRouter } from 'next/navigation';
@@ -59,6 +60,7 @@ export function LoginForm() {
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -74,6 +76,7 @@ export function LoginForm() {
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setShowForgotPassword(false);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       
@@ -93,8 +96,40 @@ export function LoginForm() {
         });
       }
     } catch (error: any) {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        setShowForgotPassword(true);
+      }
       toast({
         title: 'Authentication Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    const email = loginForm.getValues('email');
+    if (!email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address to reset your password.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Check your inbox for instructions to reset your password.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
@@ -137,6 +172,7 @@ export function LoginForm() {
     setActiveTab(value);
     loginForm.reset();
     signUpForm.reset();
+    setShowForgotPassword(false);
   }
 
   return (
@@ -200,6 +236,19 @@ export function LoginForm() {
                     </FormItem>
                   )}
                 />
+                 {showForgotPassword && (
+                  <div className="text-sm">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="p-0 h-auto font-normal"
+                      onClick={handlePasswordReset}
+                      disabled={isLoading}
+                    >
+                      Forgot Password?
+                    </Button>
+                  </div>
+                )}
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={isLoading}>
