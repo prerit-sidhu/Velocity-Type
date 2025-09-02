@@ -1,4 +1,3 @@
-'use server';
 
 import { getServerInitializedFirebase } from './firebase';
 
