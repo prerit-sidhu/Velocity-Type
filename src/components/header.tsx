@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 import { useAuth } from '@/context/auth-context';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebase-client';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 

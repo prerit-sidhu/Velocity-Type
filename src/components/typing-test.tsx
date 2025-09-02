@@ -5,7 +5,7 @@ import { WordDisplay } from './word-display';
 import { Results } from './results';
 import { LiveStats } from './live-stats';
 import { useAuth } from '@/context/auth-context';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 

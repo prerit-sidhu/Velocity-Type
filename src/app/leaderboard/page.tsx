@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-server';
 import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { LeaderboardTable } from '@/components/leaderboard-table';
 
